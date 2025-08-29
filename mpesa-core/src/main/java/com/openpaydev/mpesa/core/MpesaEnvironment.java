@@ -1,4 +1,4 @@
-package com.mpesa.core;
+package com.openpaydev.mpesa.core;
 
 /**
  * Enum representing the Mpesa API environments.

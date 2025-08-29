@@ -1,8 +1,8 @@
-package com.mpesa.backend.auth;
+package com.openpaydev.mpesa.backend.auth;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mpesa.core.MpesaConfig;
+import com.openpaydev.mpesa.core.MpesaConfig;
 import okhttp3.*;
 
 import java.io.IOException;

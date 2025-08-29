@@ -1,24 +1,70 @@
-allprojects {
-    group = 'com.mpesa'
-    version = '0.1.0'
-
-    repositories {
-        mavenCentral()
-    }
+plugins {
+    id 'java-library'
+    id 'maven-publish'
 }
 
-subprojects {
-    apply plugin: 'java'
+group = 'com.openpaydev.mpesa'
+version = '1.0.0-SNAPSHOT'
 
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(11)
-        }
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api 'com.squareup.okhttp3:okhttp:4.12.0'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+
+    api 'org.slf4j:slf4j-api:2.0.13'
+
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
     }
+    withJavadocJar()
+    withSourcesJar()
+}
 
-    tasks.withType(JavaCompile).configureEach {
-        sourceCompatibility = '11'
-        targetCompatibility = '11'
-        options.release.set(11)
+// =====================================================================
+// ==            NEW: PUBLISHING METADATA FOR MAVEN CENTRAL           ==
+// =====================================================================
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'Mpesa SDK for Java'
+                description = 'A Java SDK for interacting with the Safaricom M-Pesa API, starting with M-Pesa Express (STK Push).'
+                url = 'https://github.com/openpaydev/mpesa-sdk-java'
+
+                licenses {
+                    license {
+                        name = 'The MIT License'
+                        url = 'http://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'martwebber'
+                        name = 'Martin'
+                        email = 'mwangi.martin24@gmail.com'
+                        organization = 'io.github.openpaydev'
+                        organizationUrl = 'https://github.com/openpaydev'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/openpaydev/mpesa-sdk-java.git'
+                    developerConnection = 'scm:git:ssh://github.com/openpaydev/mpesa-sdk-java.git'
+                    url = 'https://github.com/openpaydev/mpesa-sdk-java'
+                }
+            }
+        }
     }
 }

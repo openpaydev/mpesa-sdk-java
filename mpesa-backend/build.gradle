@@ -82,9 +82,9 @@ publishing {
         mavenJava(MavenPublication) {
             from components.java
 
-            groupId = 'com.mpesa'
+            groupId = 'com.openpaydev.mpesa'
             artifactId = 'mpesa-backend'
-            version = '0.1.0'
+            version = '1.0.0-SNAPSHOT'
 
             artifact sourceJar
             artifact javadocJar

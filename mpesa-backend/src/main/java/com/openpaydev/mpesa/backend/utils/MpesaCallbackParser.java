@@ -1,7 +1,7 @@
-package com.mpesa.backend.utils;
+package com.openpaydev.mpesa.backend.utils;
 
 import com.google.gson.Gson;
-import com.mpesa.backend.models.StkCallback;
+import com.openpaydev.mpesa.backend.models.StkCallback;
 
 public class MpesaCallbackParser {
 

@@ -1,15 +1,12 @@
-package com.mpesa.backend;
+package com.openpaydev.mpesa.backend;
 
-import com.mpesa.backend.auth.MpesaTokenManager;
-import com.mpesa.backend.models.StkPushRequest;
-import com.mpesa.backend.models.StkPushResponse;
-import com.mpesa.core.MpesaConfig;
+import com.openpaydev.mpesa.backend.auth.MpesaTokenManager;
+import com.openpaydev.mpesa.core.MpesaConfig;
 import okhttp3.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;

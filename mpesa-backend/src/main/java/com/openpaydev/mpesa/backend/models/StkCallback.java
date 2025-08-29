@@ -1,4 +1,4 @@
-package com.mpesa.backend.models;
+package com.openpaydev.mpesa.backend.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

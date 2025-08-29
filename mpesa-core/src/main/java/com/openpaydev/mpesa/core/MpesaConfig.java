@@ -1,4 +1,4 @@
-package com.mpesa.core;
+package com.openpaydev.mpesa.core;
 
 import lombok.Builder;
 

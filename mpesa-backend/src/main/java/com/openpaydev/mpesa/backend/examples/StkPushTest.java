@@ -1,13 +1,13 @@
-package com.mpesa.backend.examples;
+package com.openpaydev.mpesa.backend.examples;
 
-import com.mpesa.backend.MpesaClient;
-import com.mpesa.backend.auth.MpesaTokenManager;
-import com.mpesa.backend.models.StkPushRequest;
-import com.mpesa.backend.models.StkPushResponse;
-import com.mpesa.backend.models.StkStatusQueryResponse; // Make sure this import is added
-import com.mpesa.backend.models.TransactionType;
-import com.mpesa.core.MpesaConfig;
-import com.mpesa.core.MpesaEnvironment;
+import com.openpaydev.mpesa.backend.MpesaClient;
+import com.openpaydev.mpesa.backend.auth.MpesaTokenManager;
+import com.openpaydev.mpesa.backend.models.StkPushRequest;
+import com.openpaydev.mpesa.backend.models.StkPushResponse;
+import com.openpaydev.mpesa.backend.models.StkStatusQueryResponse; // Make sure this import is added
+import com.openpaydev.mpesa.backend.models.TransactionType;
+import com.openpaydev.mpesa.core.MpesaConfig;
+import com.openpaydev.mpesa.core.MpesaEnvironment;
 import okhttp3.OkHttpClient;
 
 public class StkPushTest {

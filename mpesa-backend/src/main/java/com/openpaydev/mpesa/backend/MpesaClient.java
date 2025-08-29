@@ -1,11 +1,11 @@
-package com.mpesa.backend;
+package com.openpaydev.mpesa.backend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mpesa.backend.auth.MpesaTokenManager;
-import com.mpesa.backend.models.StkPushRequest;
-import com.mpesa.backend.models.StkPushResponse;
-import com.mpesa.backend.models.StkStatusQueryResponse;
-import com.mpesa.core.MpesaConfig;
+import com.openpaydev.mpesa.backend.auth.MpesaTokenManager;
+import com.openpaydev.mpesa.backend.models.StkPushRequest;
+import com.openpaydev.mpesa.backend.models.StkPushResponse;
+import com.openpaydev.mpesa.backend.models.StkStatusQueryResponse;
+import com.openpaydev.mpesa.core.MpesaConfig;
 import okhttp3.*;
 
 import java.io.IOException;
