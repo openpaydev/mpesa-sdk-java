@@ -1,13 +1,7 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-    }
-    plugins {
-        id 'org.springframework.boot' version '3.2.5'
-        id 'io.spring.dependency-management' version '1.1.4'
-    }
-}
+rootProject.name = 'mpesa-java-sdk'
 
-rootProject.name = 'mpesa-sdk-java'
-include 'mpesa-core', 'mpesa-backend'
+// This line tells Gradle that a module named 'core' exists.
+include 'mpesa-core'
+
+// This line tells Gradle that a module named 'mpesa-backend' also exists.
+include 'mpesa-backend'
