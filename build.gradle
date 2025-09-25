@@ -1,37 +1,70 @@
-// Root build.gradle
-
 plugins {
-    // This is a community plugin, so we manage its version here for all subprojects.
-    // 'apply false' makes it available but doesn't apply it to the root project. This is correct.
-    id "com.vanniktech.maven.publish" version "0.25.3" apply false
+    id 'java-library'
+    id "com.vanniktech.maven.publish" version "0.34.0"
 }
 
-// Configure settings common to ALL modules (including the root project itself)
-allprojects {
-    group = GROUP
-    version = VERSION_NAME
-
-    repositories {
-        mavenCentral()
-    }
+// Add this block
+repositories {
+    mavenCentral()
 }
 
-// Configure settings that apply ONLY to the subprojects (i.e., 'core')
-subprojects {
-    // Apply the java-library plugin to every submodule
-    apply plugin: 'java-library'
+dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1'
 
-    // Configure Java settings common to all submodules
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(11)
+    implementation group: 'io.github.openpaydev', name: 'mpesa-core', version: '1.0.3'
+
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+    // Testing dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+}
+
+// You also need to tell Gradle's 'test' task to use the JUnit 5 platform
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+mavenPublishing {
+    coordinates(GROUP, 'mpesa', VERSION_NAME)
+
+    pom {
+        name.set(POM_NAME)
+        description.set(POM_DESCRIPTION)
+        inceptionYear.set(POM_INCEPTION_YEAR)
+        url.set(POM_URL)
+
+        licenses {
+            license {
+                name.set(POM_LICENCE_NAME)
+                url.set(POM_LICENCE_URL)
+                distribution.set(POM_LICENCE_DIST)
+            }
         }
-        withJavadocJar()
-        withSourcesJar()
+
+        developers {
+            developer {
+                id.set(POM_DEVELOPER_ID)
+                name.set(POM_DEVELOPER_NAME)
+                email.set(POM_DEVELOPER_EMAIL)
+                url.set(POM_DEVELOPER_URL)
+                organization.set(POM_ORGANIZATION_NAME)
+                organizationUrl.set(POM_ORGANIZATION_URL)
+            }
+        }
+
+        scm {
+            url.set(POM_SCM_URL)
+            connection.set(POM_SCM_CONNECTION)
+            developerConnection.set(POM_SCM_DEV_CONNECTION)
+        }
     }
 
-    // Configure testing framework for all submodules
-    test {
-        useJUnitPlatform()
-    }
+//    signAllPublications()
 }
