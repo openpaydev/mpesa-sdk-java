@@ -1,24 +1,70 @@
-allprojects {
-    group = 'com.mpesa'
-    version = '0.1.0'
-
-    repositories {
-        mavenCentral()
-    }
+plugins {
+    id 'java-library'
+    id "com.vanniktech.maven.publish" version "0.34.0"
 }
 
-subprojects {
-    apply plugin: 'java'
+// Add this block
+repositories {
+    mavenCentral()
+}
 
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(11)
+dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1'
+
+    implementation group: 'io.github.openpaydev', name: 'mpesa-core', version: '1.0.3'
+
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+    // Testing dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+}
+
+// You also need to tell Gradle's 'test' task to use the JUnit 5 platform
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+mavenPublishing {
+    coordinates(GROUP, 'mpesa', VERSION_NAME)
+
+    pom {
+        name.set(POM_NAME)
+        description.set(POM_DESCRIPTION)
+        inceptionYear.set(POM_INCEPTION_YEAR)
+        url.set(POM_URL)
+
+        licenses {
+            license {
+                name.set(POM_LICENCE_NAME)
+                url.set(POM_LICENCE_URL)
+                distribution.set(POM_LICENCE_DIST)
+            }
+        }
+
+        developers {
+            developer {
+                id.set(POM_DEVELOPER_ID)
+                name.set(POM_DEVELOPER_NAME)
+                email.set(POM_DEVELOPER_EMAIL)
+                url.set(POM_DEVELOPER_URL)
+                organization.set(POM_ORGANIZATION_NAME)
+                organizationUrl.set(POM_ORGANIZATION_URL)
+            }
+        }
+
+        scm {
+            url.set(POM_SCM_URL)
+            connection.set(POM_SCM_CONNECTION)
+            developerConnection.set(POM_SCM_DEV_CONNECTION)
         }
     }
 
-    tasks.withType(JavaCompile).configureEach {
-        sourceCompatibility = '11'
-        targetCompatibility = '11'
-        options.release.set(11)
-    }
+//    signAllPublications()
 }
