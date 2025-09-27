@@ -48,8 +48,6 @@ public final class MpesaCallbackParser {
      * Private constructor to prevent instantiation of this utility class.
      */
     private MpesaCallbackParser() {
-        // This enforces the utility class pattern by preventing instantiation,
-        // even through reflection.
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }
 

@@ -3,9 +3,13 @@ plugins {
     id "com.vanniktech.maven.publish" version "0.34.0"
 }
 
-// Add this block
 repositories {
     mavenCentral()
+}
+
+// Define a single version for all JUnit 5 libraries
+ext {
+    junitVersion = '5.10.2' // Using a recent, stable version
 }
 
 dependencies {
@@ -13,7 +17,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1'
 
-    implementation group: 'io.github.openpaydev', name: 'mpesa-core', version: '1.0.3'
+//    implementation group: 'io.github.openpaydev', name: 'mpesa-core', version: '1.0.3'
 
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
@@ -21,12 +25,13 @@ dependencies {
     // Testing dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
+
     testImplementation 'org.mockito:mockito-core:5.11.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
 }
 
-// You also need to tell Gradle's 'test' task to use the JUnit 5 platform
 tasks.named('test') {
     useJUnitPlatform()
 }
@@ -66,5 +71,4 @@ mavenPublishing {
         }
     }
 
-//    signAllPublications()
 }
