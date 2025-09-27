@@ -28,7 +28,6 @@ public class MpesaTokenManager implements TokenManager {
     private final OkHttpClient client;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // 1. Add a Clock field for handling time-related logic.
     private final Clock clock;
 
     private String cachedToken;
@@ -42,7 +41,6 @@ public class MpesaTokenManager implements TokenManager {
      * @param client The OkHttpClient for making requests.
      */
     public MpesaTokenManager(MpesaConfig config, OkHttpClient client) {
-        // 2. The public constructor now delegates to the private one, providing the system clock.
         this(config, client, Clock.systemDefaultZone());
     }
 
@@ -62,7 +60,6 @@ public class MpesaTokenManager implements TokenManager {
 
     @Override
     public synchronized String getAccessToken() throws MpesaAuthException {
-        // 3. Replace System.currentTimeMillis() with clock.millis() for the expiry check.
         if (cachedToken != null && clock.millis() < (expiryTime - TOKEN_EXPIRY_BUFFER_MS)) {
             return cachedToken;
         }

@@ -37,8 +37,6 @@ public class MpesaClient implements MpesaService {
         String timestamp = MpesaUtils.getTimestamp();
         String password = MpesaUtils.generatePassword(config.getBusinessShortCode(), config.getPassKey(), timestamp);
 
-        // Use the toBuilder() method from Lombok to create a new, modified request object.
-        // This avoids mutating the user's original object.
         StkPushRequest apiRequest = userRequest.toBuilder()
                 .businessShortCode(config.getBusinessShortCode())
                 .password(password)
