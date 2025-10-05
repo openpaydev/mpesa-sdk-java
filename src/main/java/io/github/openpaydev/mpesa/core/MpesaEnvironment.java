@@ -50,4 +50,13 @@ public enum MpesaEnvironment {
     public String getStkQueryUrl() {
         return baseUrl + "/mpesa/stkpushquery/v1/query";
     }
+
+    /**
+     * Returns the full URL for the C2B Register URL endpoint.
+     *
+     * @return The complete C2B Register URL as a String.
+     */
+    public String getC2bRegisterUrl() {
+        return baseUrl + "/mpesa/c2b/v1/registerurl";
+    }
 }

@@ -2,7 +2,8 @@ package io.github.openpaydev.mpesa;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.openpaydev.mpesa.core.MpesaConfig;
-import io.github.openpaydev.mpesa.core.MpesaService;
+import io.github.openpaydev.mpesa.core.service.C2bService;
+import io.github.openpaydev.mpesa.core.service.StkPushService;
 import io.github.openpaydev.mpesa.core.auth.TokenManager;
 import io.github.openpaydev.mpesa.core.exceptions.MpesaApiException;
 import io.github.openpaydev.mpesa.core.exceptions.MpesaException;
@@ -15,9 +16,9 @@ import java.util.Objects;
 
 /**
  * The main client for interacting with the Safaricom M-Pesa API.
- * This class implements the {@link MpesaService} interface from mpesa-core.
+ * This class implements the {@link StkPushService} and {@link C2bService} interfaces.
  */
-public class MpesaClient implements MpesaService {
+public class MpesaClient implements StkPushService, C2bService {
 
     private static final MediaType JSON_MEDIA_TYPE = MediaType.get("application/json; charset=utf-8");
 
@@ -64,6 +65,17 @@ public class MpesaClient implements MpesaService {
         return execute(config.getEnvironment().getStkQueryUrl(), queryRequest, StkStatusQueryResponse.class);
     }
 
+    /**
+     * ADD THIS NEW METHOD IMPLEMENTATION
+     */
+    @Override
+    public C2bRegisterUrlResponse registerC2bUrl(C2bRegisterUrlRequest userRequest) throws MpesaException {
+        C2bRegisterUrlRequest apiRequest = userRequest.toBuilder()
+                .shortCode(config.getBusinessShortCode())
+                .build();
+
+        return execute(config.getEnvironment().getC2bRegisterUrl(), apiRequest, C2bRegisterUrlResponse.class);
+    }
     /**
      * A generic, private method to handle the boilerplate of executing authenticated HTTP POST requests.
      */

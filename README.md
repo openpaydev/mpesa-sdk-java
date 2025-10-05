@@ -21,12 +21,6 @@ This SDK provides a clean, fluent interface for M-Pesa APIs, starting with the w
 
 This SDK is published to Maven Central. You can add it to your project using Maven or Gradle.
 
-The SDK is split into two parts:
-*   `mpesa-core`: A lightweight module with only the data models and interfaces. Useful for sharing between platforms (e.g., a JVM server and an Android app).
-*   `mpesa-sdk-java`: The main SDK implementation, which includes the HTTP client and authentication logic.
-
-**For most users, you will only need to add `mpesa-sdk-java`.**
-
 ### Maven
 
 Add this to your `pom.xml`:
@@ -109,4 +103,4 @@ Contributions are welcome!
 Please read our CONTRIBUTING.md 
 for details on our code of conduct and the process for submitting pull requests.
 ## License
-This project is licensed under the MIT License - see the **LICENSE** file for details.
+This project is licensed under the MIT License - see the **LICENSE** file for details.ooooooo
