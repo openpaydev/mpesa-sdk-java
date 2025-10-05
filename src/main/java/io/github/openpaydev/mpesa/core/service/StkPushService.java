@@ -1,11 +1,11 @@
-package io.github.openpaydev.mpesa.core;
+package io.github.openpaydev.mpesa.core.service;
 
 import io.github.openpaydev.mpesa.core.exceptions.MpesaException;
 import io.github.openpaydev.mpesa.core.models.StkPushRequest;
 import io.github.openpaydev.mpesa.core.models.StkPushResponse;
 import io.github.openpaydev.mpesa.core.models.StkStatusQueryResponse;
 
-public interface MpesaService {
+public interface StkPushService {
     /**
      * Initiates an M-Pesa STK Push request.
      * @param request The STK Push request object.
