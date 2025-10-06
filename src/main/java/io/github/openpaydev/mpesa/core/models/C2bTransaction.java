@@ -14,42 +14,42 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class C2bTransaction {
-    @JsonProperty("TransactionType")
-    String transactionType;
+  @JsonProperty("TransactionType")
+  String transactionType;
 
-    @JsonProperty("TransID")
-    String transactionId;
+  @JsonProperty("TransID")
+  String transactionId;
 
-    @JsonProperty("TransTime")
-    String transactionTime;
+  @JsonProperty("TransTime")
+  String transactionTime;
 
-    @JsonProperty("TransAmount")
-    String transactionAmount;
+  @JsonProperty("TransAmount")
+  String transactionAmount;
 
-    @JsonProperty("BusinessShortCode")
-    String businessShortCode;
+  @JsonProperty("BusinessShortCode")
+  String businessShortCode;
 
-    @JsonProperty("BillRefNumber")
-    String billRefNumber; // Account number
+  @JsonProperty("BillRefNumber")
+  String billRefNumber; // Account number
 
-    @JsonProperty("InvoiceNumber")
-    String invoiceNumber;
+  @JsonProperty("InvoiceNumber")
+  String invoiceNumber;
 
-    @JsonProperty("OrgAccountBalance")
-    String orgAccountBalance;
+  @JsonProperty("OrgAccountBalance")
+  String orgAccountBalance;
 
-    @JsonProperty("ThirdPartyTransID")
-    String thirdPartyTransID;
+  @JsonProperty("ThirdPartyTransID")
+  String thirdPartyTransID;
 
-    @JsonProperty("MSISDN")
-    String msisdn;
+  @JsonProperty("MSISDN")
+  String msisdn;
 
-    @JsonProperty("FirstName")
-    String firstName;
+  @JsonProperty("FirstName")
+  String firstName;
 
-    @JsonProperty("MiddleName")
-    String middleName;
+  @JsonProperty("MiddleName")
+  String middleName;
 
-    @JsonProperty("LastName")
-    String lastName;
+  @JsonProperty("LastName")
+  String lastName;
 }
