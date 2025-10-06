@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - develop
+      - beta
+      - sdk-release/**
+      - feature/**
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+*
+  pull_request:
+    branches:
+      - master
+      - develop
+      - beta
+      - private-preview
+      - sdk-release/**
+      - feature/**
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/gradle-build-action@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Spotless format check
+        run: ./gradlew spotlessCheck
+
+      - name: Build artifacts and docs
+        run: ./gradlew assemble javadoc
+
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: ["8", "11", "17", "21", "25"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java-version }}
+
+      - uses:  gradle/gradle-build-action@v3
+
+      - name: Display Java version
+        run: java -version
+
+      - name: Run tests
+        run: ./gradlew ci
+
+  publish:
+    name: Publish to Maven Central
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build, test]
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/gradle-build-action@v3
+
+      - name: Import GPG key
+        run: |
+          echo "$GPG_SIGNING_PRIVKEY" | base64 --decode | gpg --import --batch --yes --pinentry-mode loopback --passphrase "$GPG_SIGNING_PASSPHRASE"
+        env:
+          GPG_SIGNING_PRIVKEY: ${{ secrets.GPG_SIGNING_PRIVKEY }}
+          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+
+      - name: Publish artifacts
+        run: |
+          ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository \
+            -Psigning.gnupg.keyName=$GPG_SIGNING_KEYID \
+            -Psigning.gnupg.passphrase=$GPG_SIGNING_PASSPHRASE \
+            -PnexusUsername=$NEXUS_USERNAME \
+            -PnexusPassword=$NEXUS_PASSWORD
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          GPG_SIGNING_KEYID: ${{ secrets.GPG_SIGNING_KEYID }}
+          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+
+  publish-docs:
+    name: Publish Javadoc
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, 'beta')
+    needs: [build, test]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/gradle-build-action@v3
+
+      - name: Publish Javadoc
+        run: ./gradlew gitPublishPush --stacktrace --info
+        env:
+          GRGIT_USER: ${{ github.actor }}
+          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
+
+  compat:
+    name: Binary Compatibility Check
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install japi-compliance-checker
+        run: git clone https://github.com/lvc/japi-compliance-checker ../japi-compliance-checker
+
+      - name: Build new JAR
+        run: ./gradlew jar
+      - run: mv build/libs/*.jar ../japi-compliance-checker/new.jar
+
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+
+      - name: Build base JAR
+        run: ./gradlew jar
+      - run: mv build/libs/*.jar ../japi-compliance-checker/old.jar
+
+      - name: Run JAPI Compliance Checker
+        run: |
+          pushd ../japi-compliance-checker
+          perl japi-compliance-checker.pl -old old.jar -new new.jar --lib=${{ github.event.repository.name }} || echo "failed" > compliance_failure
+          popd
+          mv ../japi-compliance-checker/compat_reports/*/compat_report.html report.html
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JAPI Compliance Report
+          path: report.html
+
+      - name: Fail if incompatible
+        run: |
+          if [ -f "../japi-compliance-checker/compliance_failure" ]; then
+            echo "Compatibility problems detected. Check the report artifact."
+            exit 1
+          fi
