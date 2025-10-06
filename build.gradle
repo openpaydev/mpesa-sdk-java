@@ -64,10 +64,10 @@ spotless {
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
-        // Optional: include license header check
-        // licenseHeaderFile('config/license-header.txt')
     }
 }
+
+//def sonatypeHost = com.vanniktech.maven.publish.SonatypeHost.S01
 
 // ============================================================================
 // PUBLISHING (Configured through gradle.properties)
@@ -110,6 +110,7 @@ mavenPublishing {
             developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION"))
         }
     }
+
 }
 
 // ============================================================================
@@ -128,18 +129,4 @@ tasks.withType(JavaCompile).configureEach {
             "-Werror",
             "-Xlint:-processing"
     ]
-}
-
-// ============================================================================
-// MAVEN CENTRAL CONFIGURATION
-// ============================================================================
-mavenPublishing {
-    // Publish to Maven Central (Sonatype S01 for newer accounts)
-    publishToMavenCentral(SonatypeHost.S01)
-
-    // Automatically sign all artifacts
-    signAllPublications()
-
-    // If you want to include sources and javadocs (you already do via java block)
-    pomFromGradleProperties()
 }
