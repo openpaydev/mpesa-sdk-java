@@ -141,7 +141,7 @@ jobs:
 
       - name: Publish artifacts
         run: |
-          ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository \
+          ./gradlew publishAndReleaseToMavenCentral \
             -Psigning.gnupg.keyName=$GPG_SIGNING_KEYID \
             -Psigning.gnupg.passphrase=$GPG_SIGNING_PASSPHRASE \
             -PnexusUsername=$NEXUS_USERNAME \
