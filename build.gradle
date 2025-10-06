@@ -74,6 +74,38 @@ mavenPublishing {
             project.findProperty("POM_ARTIFACT_ID"),
             project.findProperty("VERSION_NAME")
     )
+
+    pom {
+        name.set(project.findProperty("POM_NAME"))
+        description.set(project.findProperty("POM_DESCRIPTION"))
+        inceptionYear.set(project.findProperty("POM_INCEPTION_YEAR"))
+        url.set(project.findProperty("POM_URL"))
+
+        licenses {
+            license {
+                name.set(project.findProperty("POM_LICENCE_NAME"))
+                url.set(project.findProperty("POM_LICENCE_URL"))
+                distribution.set(project.findProperty("POM_LICENCE_DIST"))
+            }
+        }
+
+        developers {
+            developer {
+                id.set(project.findProperty("POM_DEVELOPER_ID"))
+                name.set(project.findProperty("POM_DEVELOPER_NAME"))
+                email.set(project.findProperty("POM_DEVELOPER_EMAIL"))
+                url.set(project.findProperty("POM_DEVELOPER_URL"))
+                organization.set(project.findProperty("POM_ORGANIZATION_NAME"))
+                organizationUrl.set(project.findProperty("POM_ORGANIZATION_URL"))
+            }
+        }
+
+        scm {
+            url.set(project.findProperty("POM_SCM_URL"))
+            connection.set(project.findProperty("POM_SCM_CONNECTION"))
+            developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION"))
+        }
+    }
 }
 
 // --- CI/local tasks ---
