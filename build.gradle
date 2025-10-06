@@ -129,3 +129,17 @@ tasks.withType(JavaCompile).configureEach {
             "-Xlint:-processing"
     ]
 }
+
+// ============================================================================
+// MAVEN CENTRAL CONFIGURATION
+// ============================================================================
+mavenPublishing {
+    // Publish to Maven Central (Sonatype S01 for newer accounts)
+    publishToMavenCentral(SonatypeHost.S01)
+
+    // Automatically sign all artifacts
+    signAllPublications()
+
+    // If you want to include sources and javadocs (you already do via java block)
+    pomFromGradleProperties()
+}
