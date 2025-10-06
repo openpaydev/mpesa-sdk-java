@@ -64,10 +64,10 @@ spotless {
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
-        // Optional: include license header check
-        // licenseHeaderFile('config/license-header.txt')
     }
 }
+
+//def sonatypeHost = com.vanniktech.maven.publish.SonatypeHost.S01
 
 // ============================================================================
 // PUBLISHING (Configured through gradle.properties)
@@ -110,6 +110,7 @@ mavenPublishing {
             developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION"))
         }
     }
+
 }
 
 // ============================================================================
