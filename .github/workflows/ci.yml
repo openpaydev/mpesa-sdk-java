@@ -26,7 +26,7 @@ jobs:
   # ======================================================
   build:
     name: Build
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
   # ======================================================
   test:
     name: Test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     needs: build
 
     strategy:
@@ -112,79 +112,126 @@ jobs:
           path: build/reports/tests/test
 
   # ======================================================
-  # PUBLISH STAGE
+  # PUBLISH STAGE — Central Portal (2025+)
   # ======================================================
   publish:
-    name: Publish to Sonatype
+    name: Publish to Maven Central (Central Portal)
     if: >-
       ((github.event_name == 'workflow_dispatch') || (github.event_name == 'push')) &&
       startsWith(github.ref, 'refs/tags/v')
-    needs: [build, test]
-    runs-on: ubuntu-24.04
+    needs: [ build, test ]
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Java
-        id: setup-jre
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Import GPG key
-        run: |
-          echo "$GPG_SIGNING_PRIVKEY" | base64 --decode | gpg --import --batch --yes --pinentry-mode loopback --passphrase "$GPG_SIGNING_PASSPHRASE"
+      - name: Configure GPG
         env:
-          GPG_SIGNING_PRIVKEY: ${{ secrets.GPG_SIGNING_PRIVKEY }}
-          GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY_B64 }}
+          GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY_B64 }}
+        run: |
+          echo "🔑 Importing private key..."
+          echo "$GPG_PRIVATE_KEY" | gpg --import --batch --yes
+          echo "🔑 Importing public key..."
+          echo "$GPG_PUBLIC_KEY" | gpg --import --batch --yes
+          echo "✅ Listing imported keys..."
+          gpg --list-secret-keys --keyid-format=long
 
-      - name: Publish artifacts
-        run: |
-          ./gradlew publishAndReleaseToMavenCentral \
-            -Psigning.gnupg.keyName=$GPG_SIGNING_KEYID \
-            -Psigning.gnupg.passphrase=$GPG_SIGNING_PASSPHRASE \
-            -PnexusUsername=$NEXUS_USERNAME \
-            -PnexusPassword=$NEXUS_PASSWORD
+      - name: Build, sign, and bundle for Maven Central
         env:
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           GPG_SIGNING_KEYID: ${{ secrets.GPG_SIGNING_KEYID }}
           GPG_SIGNING_PASSPHRASE: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+        run: |
+          echo "🏗️ Building and signing project..."
+          ./gradlew clean build sign bundleForCentral \
+            -Psigning.gnupg.keyName=$GPG_SIGNING_KEYID \
+            -Psigning.gnupg.passphrase=$GPG_SIGNING_PASSPHRASE \
+            -Psigning.gnupg.homeDir=$HOME/.gnupg \
+            --no-daemon --stacktrace
 
-  # ======================================================
-  # DOCS STAGE
-  # ======================================================
-  publish-docs:
-    name: Publish Javadocs
-    if: >-
-      ((github.event_name == 'workflow_dispatch') || (github.event_name == 'push')) &&
-      startsWith(github.ref, 'refs/tags/v') &&
-      !contains(github.ref, 'beta')
-    needs: [build, test]
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
+      - name: Publish to local Maven repo
+        run: |
+          echo "📦 Publishing to local Maven repository..."
+          ./gradlew publishToMavenLocal --no-daemon --stacktrace
 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
+      - name: Regenerate checksums
+        run: |
+          echo "🔄 Regenerating checksums..."
+          VERSION="${GITHUB_REF_NAME#v}"
+          REPO_PATH="$HOME/.m2/repository/io/github/openpaydev/mpesa-sdk-java/$VERSION"
+          if [[ -d "$REPO_PATH" ]]; then
+            cd "$REPO_PATH"
+            for f in *.jar *.module *.pom; do
+              if [[ -f "$f" ]]; then
+                md5sum "$f" | awk '{print $1}' > "$f.md5"
+                sha1sum "$f" | awk '{print $1}' > "$f.sha1"
+              fi
+            done
+            cd - >/dev/null
+          else
+            echo "⚠️ Repository path not found: $REPO_PATH"
+          fi
 
-      - name: Publish Javadocs
-        run: ./gradlew gitPublishPush --stacktrace --info
+      - name: Rebuild bundle for upload
+        run: |
+          echo "📦 Rebuilding upload bundle..."
+          VERSION="${GITHUB_REF_NAME#v}"
+          REPO_PATH="$HOME/.m2/repository/io/github/openpaydev/mpesa-sdk-java/$VERSION"
+          
+          if [[ ! -d "$REPO_PATH" ]]; then
+            echo "❌ Repository path not found: $REPO_PATH"
+            exit 1
+          fi
+          
+          cd "$HOME/.m2/repository"
+          
+          BUNDLE_NAME="mpesa-sdk-java-${VERSION}.zip"
+          BUNDLE_PATH="$HOME/${BUNDLE_NAME}"
+          
+          echo "📦 Zipping contents into ${BUNDLE_NAME}..."
+          zip -r "${BUNDLE_PATH}" "io/github/openpaydev/mpesa-sdk-java/${VERSION}/"
+          
+          cd - >/dev/null
+          ls -lh "${BUNDLE_PATH}"
+          
+          echo "✅ Bundle created at ${BUNDLE_PATH}"
+
+      - name: Upload to Central Portal
         env:
-          GRGIT_USER: ${{ github.actor }}
-          GRGIT_PASS: ${{ secrets.GITHUB_TOKEN }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+        run: |
+          echo "🚀 Uploading to Sonatype Central Portal..."
+          VERSION="${GITHUB_REF_NAME#v}"
+          BUNDLE_PATH="$HOME/mpesa-sdk-java-${VERSION}.zip"
+          
+          if [[ ! -f "$BUNDLE_PATH" ]]; then
+            echo "❌ Bundle not found at $BUNDLE_PATH"
+            exit 1
+          fi
+          
+          TOKEN=$(echo -n "$CENTRAL_USERNAME:$CENTRAL_PASSWORD" | base64)
+          
+          curl --fail --show-error --silent \
+            --request POST \
+            --header "Authorization: Basic $TOKEN" \
+            --form bundle=@"$BUNDLE_PATH" \
+            "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC"
+          
+          echo "✅ Publish completed successfully!"
 
   # ======================================================
   # COMPAT STAGE
   # ======================================================
   compat:
     name: API Compatibility Check
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     needs: build
 
     steps:
@@ -219,9 +266,9 @@ jobs:
       - name: Run JAPI Compliance Checker
         run: |
           pushd ../japi-compliance-checker
-          perl japi-compliance-checker.pl -old old.jar -new new.jar --lib=mpesa-java-sdk || echo "failed" > compliance_failure
+          perl japi-compliance-checker.pl -old old.jar -new new.jar --lib=mpesa-sdk-java || echo "failed" > compliance_failure
           popd
-          mv ../japi-compliance-checker/compat_reports/mpesa-java-sdk/*/compat_report.html report.html
+          mv ../japi-compliance-checker/compat_reports/mpesa-sdk-java/*/compat_report.html report.html
 
       - name: Upload report
         uses: actions/upload-artifact@v4

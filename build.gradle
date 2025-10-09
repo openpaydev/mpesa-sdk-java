@@ -1,3 +1,129 @@
+//plugins {
+//    id 'java-library'
+//    id 'io.freefair.lombok' version '8.7.1'
+//    id 'jacoco'
+//    id 'com.diffplug.spotless' version '6.25.0'
+//    id 'com.vanniktech.maven.publish' version '0.34.0'
+//}
+//
+//group = project.findProperty("GROUP")
+//version = project.findProperty("VERSION_NAME")
+//
+//java {
+//    toolchain {
+//        languageVersion = JavaLanguageVersion.of(17)
+//    }
+//    sourceCompatibility = JavaVersion.VERSION_17
+//    targetCompatibility = JavaVersion.VERSION_17
+//    withSourcesJar()
+//    withJavadocJar()
+//}
+//
+//repositories {
+//    mavenCentral()
+//}
+//
+//ext {
+//    junitVersion = '5.10.2'
+//}
+//
+//dependencies {
+//    api 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+//    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1'
+//    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+//
+//    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
+//    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
+//    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
+//    testImplementation 'org.mockito:mockito-core:5.11.0'
+//    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+//    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
+//}
+//
+//tasks.named('test') {
+//    useJUnitPlatform()
+//    finalizedBy 'jacocoTestReport'
+//}
+//
+//jacocoTestReport {
+//    reports {
+//        xml.required = true
+//        html.required = true
+//    }
+//}
+//
+//spotless {
+//    java {
+//        googleJavaFormat('1.19.2')
+//        target 'src/**/*.java'
+//        removeUnusedImports()
+//        trimTrailingWhitespace()
+//        endWithNewline()
+//    }
+//}
+//
+//// --- Fix Javadoc errors ---
+//tasks.withType(Javadoc).configureEach {
+//    failOnError = false
+//}
+//
+//// --- Maven publishing configuration ---
+//mavenPublishing {
+//    coordinates(
+//            project.findProperty("GROUP"),
+//            project.findProperty("POM_ARTIFACT_ID"),
+//            project.findProperty("VERSION_NAME")
+//    )
+//
+//    pom {
+//        name.set(project.findProperty("POM_NAME"))
+//        description.set(project.findProperty("POM_DESCRIPTION"))
+//        inceptionYear.set(project.findProperty("POM_INCEPTION_YEAR"))
+//        url.set(project.findProperty("POM_URL"))
+//
+//        licenses {
+//            license {
+//                name.set(project.findProperty("POM_LICENCE_NAME"))
+//                url.set(project.findProperty("POM_LICENCE_URL"))
+//                distribution.set(project.findProperty("POM_LICENCE_DIST"))
+//            }
+//        }
+//
+//        developers {
+//            developer {
+//                id.set(project.findProperty("POM_DEVELOPER_ID"))
+//                name.set(project.findProperty("POM_DEVELOPER_NAME"))
+//                email.set(project.findProperty("POM_DEVELOPER_EMAIL"))
+//                url.set(project.findProperty("POM_DEVELOPER_URL"))
+//                organization.set(project.findProperty("POM_ORGANIZATION_NAME"))
+//                organizationUrl.set(project.findProperty("POM_ORGANIZATION_URL"))
+//            }
+//        }
+//
+//        scm {
+//            url.set(project.findProperty("POM_SCM_URL"))
+//            connection.set(project.findProperty("POM_SCM_CONNECTION"))
+//            developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION"))
+//        }
+//    }
+//}
+//
+//// --- CI/local tasks ---
+//tasks.register('ci') {
+//    group = "verification"
+//    description = "Runs formatting check, tests, and coverage for CI pipelines"
+//    dependsOn 'spotlessCheck', 'test', 'jacocoTestReport'
+//}
+//
+//tasks.withType(JavaCompile).configureEach {
+//    options.encoding = 'UTF-8'
+//    options.compilerArgs += [
+//            "-Xlint:all",
+//            "-Werror",
+//            "-Xlint:-processing"
+//    ]
+//}
+
 plugins {
     id 'java-library'
     id 'io.freefair.lombok' version '8.7.1'
@@ -16,7 +142,6 @@ java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
-    withJavadocJar()
 }
 
 repositories {
@@ -69,6 +194,9 @@ tasks.withType(Javadoc).configureEach {
 
 // --- Maven publishing configuration ---
 mavenPublishing {
+//    publishToMavenCentral("CENTRAL_PORTAL")
+//    signAllPublications()
+
     coordinates(
             project.findProperty("GROUP"),
             project.findProperty("POM_ARTIFACT_ID"),
@@ -122,4 +250,31 @@ tasks.withType(JavaCompile).configureEach {
             "-Werror",
             "-Xlint:-processing"
     ]
+}
+
+// --- Gradle 8.12 compatibility patch ---
+gradle.projectsEvaluated {
+    tasks.matching { it.name == "generateMetadataFileForMavenPublication" }.configureEach {
+        dependsOn(tasks.matching { it.name == "plainJavadocJar" })
+    }
+}
+
+
+// --- Signing configuration (required for Maven Central) ---
+apply plugin: 'signing'
+
+signing {
+    useGpgCmd() // Use system-installed GPG (as done in CI)
+    sign publishing.publications
+}
+
+// Allow unsigned publishing if GPG isn’t configured (e.g. PRs)
+tasks.withType(Sign).configureEach {
+    onlyIf {
+        def keyPresent = project.findProperty("signing.gnupg.keyName") && project.findProperty("signing.gnupg.passphrase")
+        if (!keyPresent) {
+            logger.lifecycle("⚠️  No signing key detected. Skipping signing for this build.")
+        }
+        return keyPresent
+    }
 }
