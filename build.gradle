@@ -1,147 +1,22 @@
-//plugins {
-//    id 'java-library'
-//    id 'io.freefair.lombok' version '8.7.1'
-//    id 'jacoco'
-//    id 'com.diffplug.spotless' version '6.25.0'
-//    id 'com.vanniktech.maven.publish' version '0.34.0'
-//}
-//
-//group = project.findProperty("GROUP")
-//version = project.findProperty("VERSION_NAME")
-//
-//java {
-//    toolchain {
-//        languageVersion = JavaLanguageVersion.of(17)
-//    }
-//    sourceCompatibility = JavaVersion.VERSION_17
-//    targetCompatibility = JavaVersion.VERSION_17
-//    withSourcesJar()
-//    withJavadocJar()
-//}
-//
-//repositories {
-//    mavenCentral()
-//}
-//
-//ext {
-//    junitVersion = '5.10.2'
-//}
-//
-//dependencies {
-//    api 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
-//    api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1'
-//    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-//
-//    testImplementation "org.junit.jupiter:junit-jupiter-api:${junitVersion}"
-//    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitVersion}"
-//    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
-//    testImplementation 'org.mockito:mockito-core:5.11.0'
-//    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
-//    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
-//}
-//
-//tasks.named('test') {
-//    useJUnitPlatform()
-//    finalizedBy 'jacocoTestReport'
-//}
-//
-//jacocoTestReport {
-//    reports {
-//        xml.required = true
-//        html.required = true
-//    }
-//}
-//
-//spotless {
-//    java {
-//        googleJavaFormat('1.19.2')
-//        target 'src/**/*.java'
-//        removeUnusedImports()
-//        trimTrailingWhitespace()
-//        endWithNewline()
-//    }
-//}
-//
-//// --- Fix Javadoc errors ---
-//tasks.withType(Javadoc).configureEach {
-//    failOnError = false
-//}
-//
-//// --- Maven publishing configuration ---
-//mavenPublishing {
-//    coordinates(
-//            project.findProperty("GROUP"),
-//            project.findProperty("POM_ARTIFACT_ID"),
-//            project.findProperty("VERSION_NAME")
-//    )
-//
-//    pom {
-//        name.set(project.findProperty("POM_NAME"))
-//        description.set(project.findProperty("POM_DESCRIPTION"))
-//        inceptionYear.set(project.findProperty("POM_INCEPTION_YEAR"))
-//        url.set(project.findProperty("POM_URL"))
-//
-//        licenses {
-//            license {
-//                name.set(project.findProperty("POM_LICENCE_NAME"))
-//                url.set(project.findProperty("POM_LICENCE_URL"))
-//                distribution.set(project.findProperty("POM_LICENCE_DIST"))
-//            }
-//        }
-//
-//        developers {
-//            developer {
-//                id.set(project.findProperty("POM_DEVELOPER_ID"))
-//                name.set(project.findProperty("POM_DEVELOPER_NAME"))
-//                email.set(project.findProperty("POM_DEVELOPER_EMAIL"))
-//                url.set(project.findProperty("POM_DEVELOPER_URL"))
-//                organization.set(project.findProperty("POM_ORGANIZATION_NAME"))
-//                organizationUrl.set(project.findProperty("POM_ORGANIZATION_URL"))
-//            }
-//        }
-//
-//        scm {
-//            url.set(project.findProperty("POM_SCM_URL"))
-//            connection.set(project.findProperty("POM_SCM_CONNECTION"))
-//            developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION"))
-//        }
-//    }
-//}
-//
-//// --- CI/local tasks ---
-//tasks.register('ci') {
-//    group = "verification"
-//    description = "Runs formatting check, tests, and coverage for CI pipelines"
-//    dependsOn 'spotlessCheck', 'test', 'jacocoTestReport'
-//}
-//
-//tasks.withType(JavaCompile).configureEach {
-//    options.encoding = 'UTF-8'
-//    options.compilerArgs += [
-//            "-Xlint:all",
-//            "-Werror",
-//            "-Xlint:-processing"
-//    ]
-//}
-
 plugins {
     id 'java-library'
     id 'io.freefair.lombok' version '8.7.1'
     id 'jacoco'
     id 'com.diffplug.spotless' version '6.25.0'
-    id 'com.vanniktech.maven.publish' version '0.34.0'
+    id 'org.ajoberstar.git-publish' version '4.2.0'
+    id 'maven-publish'
+    id 'signing'
 }
 
-group = project.findProperty("GROUP")
-version = project.findProperty("VERSION_NAME")
+group = findProperty("GROUP") ?: "io.github.martwebber"
+version = findProperty("VERSION_NAME") ?: "1.0.7"
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
@@ -187,94 +62,157 @@ spotless {
     }
 }
 
-// --- Fix Javadoc errors ---
 tasks.withType(Javadoc).configureEach {
     failOnError = false
 }
 
-// --- Maven publishing configuration ---
-mavenPublishing {
-//    publishToMavenCentral("CENTRAL_PORTAL")
-//    signAllPublications()
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ["-Xlint:all", "-Werror", "-Xlint:-processing"]
+}
 
-    coordinates(
-            project.findProperty("GROUP"),
-            project.findProperty("POM_ARTIFACT_ID"),
-            project.findProperty("VERSION_NAME")
-    )
+// ======================================================
+//  Maven Central Publishing (Gradle-native)
+// ======================================================
 
-    pom {
-        name.set(project.findProperty("POM_NAME"))
-        description.set(project.findProperty("POM_DESCRIPTION"))
-        inceptionYear.set(project.findProperty("POM_INCEPTION_YEAR"))
-        url.set(project.findProperty("POM_URL"))
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
 
-        licenses {
-            license {
-                name.set(project.findProperty("POM_LICENCE_NAME"))
-                url.set(project.findProperty("POM_LICENCE_URL"))
-                distribution.set(project.findProperty("POM_LICENCE_DIST"))
+            pom {
+                name.set(findProperty("POM_NAME"))
+                description.set(findProperty("POM_DESCRIPTION"))
+                url.set(findProperty("POM_URL"))
+                inceptionYear.set(findProperty("POM_INCEPTION_YEAR"))
+
+                licenses {
+                    license {
+                        name.set(findProperty("POM_LICENCE_NAME"))
+                        url.set(findProperty("POM_LICENCE_URL"))
+                        distribution.set(findProperty("POM_LICENCE_DIST"))
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set(findProperty("POM_DEVELOPER_ID"))
+                        name.set(findProperty("POM_DEVELOPER_NAME"))
+                        email.set(findProperty("POM_DEVELOPER_EMAIL"))
+                        organization.set(findProperty("POM_ORGANIZATION_NAME"))
+                        organizationUrl.set(findProperty("POM_ORGANIZATION_URL"))
+                    }
+                }
+
+                scm {
+                    url.set(findProperty("POM_SCM_URL"))
+                    connection.set(findProperty("POM_SCM_CONNECTION"))
+                    developerConnection.set(findProperty("POM_SCM_DEV_CONNECTION"))
+                }
             }
         }
+    }
 
-        developers {
-            developer {
-                id.set(project.findProperty("POM_DEVELOPER_ID"))
-                name.set(project.findProperty("POM_DEVELOPER_NAME"))
-                email.set(project.findProperty("POM_DEVELOPER_EMAIL"))
-                url.set(project.findProperty("POM_DEVELOPER_URL"))
-                organization.set(project.findProperty("POM_ORGANIZATION_NAME"))
-                organizationUrl.set(project.findProperty("POM_ORGANIZATION_URL"))
+    repositories {
+        maven {
+            name = "mavenCentral"
+            url = uri(
+                    version.endsWith("SNAPSHOT")
+                            ? "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                            : "https://central.sonatype.com/api/v1/publish"
+            )
+
+            credentials {
+                username = findProperty("mavenCentralUsername") ?: System.getenv("CENTRAL_PORTAL_USERNAME")
+                password = findProperty("mavenCentralPassword") ?: System.getenv("CENTRAL_PORTAL_TOKEN")
             }
-        }
-
-        scm {
-            url.set(project.findProperty("POM_SCM_URL"))
-            connection.set(project.findProperty("POM_SCM_CONNECTION"))
-            developerConnection.set(project.findProperty("POM_SCM_DEV_CONNECTION"))
         }
     }
 }
 
-// --- CI/local tasks ---
+// ======================================================
+// ✅ Generate .md5 and .sha1 checksums after publishing
+// ======================================================
+import java.security.MessageDigest
+
+tasks.register('generateChecksums') {
+    dependsOn 'publishToMavenLocal'
+
+    doLast {
+        def artifactFiles = fileTree(dir: "$buildDir/libs", include: "*.jar").files +
+                fileTree(dir: "$buildDir/publications/mavenJava", include: ["*.pom", "*.module"]).files
+
+        println "🔑 Generating checksums for ${artifactFiles.size()} files..."
+
+        artifactFiles.each { file ->
+            ["MD5", "SHA1"].each { algo ->
+                def digest = MessageDigest.getInstance(algo)
+                file.withInputStream { is ->
+                    byte[] buffer = new byte[8192]
+                    int bytesRead
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        digest.update(buffer, 0, bytesRead)
+                    }
+                }
+                def hash = digest.digest().collect { String.format("%02x", it) }.join()
+                def checksumFile = new File("${file.absolutePath}.${algo.toLowerCase()}")
+                checksumFile.text = "${hash}  ${file.name}"
+                println "✅ ${file.name}.${algo.toLowerCase()} -> ${hash}"
+            }
+        }
+    }
+}
+
+
+// ======================================================
+//  Signing Configuration (executes before upload)
+// ======================================================
+
+signing {
+    useGpgCmd()
+    sign publishing.publications.mavenJava
+}
+
+tasks.withType(Sign).configureEach {
+    onlyIf {
+        def keyPresent = findProperty("signing.keyId") || findProperty("signing.gnupg.keyName")
+        if (!keyPresent) {
+            logger.lifecycle("⚠️ No signing key found. Skipping signing.")
+        }
+        return keyPresent
+    }
+}
+
+// ensure signing happens *before* uploading
+tasks.withType(PublishToMavenRepository).configureEach {
+    dependsOn(tasks.withType(Sign))
+}
+
+// ======================================================
+//  CI convenience
+// ======================================================
+
 tasks.register('ci') {
     group = "verification"
-    description = "Runs formatting check, tests, and coverage for CI pipelines"
+    description = "Runs spotless check, tests, and coverage for CI pipelines"
     dependsOn 'spotlessCheck', 'test', 'jacocoTestReport'
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    options.compilerArgs += [
-            "-Xlint:all",
-            "-Werror",
-            "-Xlint:-processing"
-    ]
-}
+tasks.register('bundleForCentral', Zip) {
+    dependsOn 'publishToMavenLocal'
+    archiveFileName.set("${project.name}-${project.version}.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
 
-// --- Gradle 8.12 compatibility patch ---
-gradle.projectsEvaluated {
-    tasks.matching { it.name == "generateMetadataFileForMavenPublication" }.configureEach {
-        dependsOn(tasks.matching { it.name == "plainJavadocJar" })
+    doFirst {
+        println "📦 Collecting artifacts from local Maven repo..."
     }
-}
 
+    def groupPath = project.group.toString().replace('.', '/')
+    def artifactId = project.name
+    def versionName = project.version.toString()
 
-// --- Signing configuration (required for Maven Central) ---
-apply plugin: 'signing'
-
-signing {
-    useGpgCmd() // Use system-installed GPG (as done in CI)
-    sign publishing.publications
-}
-
-// Allow unsigned publishing if GPG isn’t configured (e.g. PRs)
-tasks.withType(Sign).configureEach {
-    onlyIf {
-        def keyPresent = project.findProperty("signing.gnupg.keyName") && project.findProperty("signing.gnupg.passphrase")
-        if (!keyPresent) {
-            logger.lifecycle("⚠️  No signing key detected. Skipping signing for this build.")
-        }
-        return keyPresent
+    from("${System.getProperty('user.home')}/.m2/repository/${groupPath}/${artifactId}/${versionName}") {
+        include "*"
+        into("${groupPath}/${artifactId}/${versionName}")
     }
 }
