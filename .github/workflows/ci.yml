@@ -133,8 +133,8 @@ jobs:
 
       - name: Configure GPG
         env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY_B64 }}
-          GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY_B64 }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PUBLIC_KEY: ${{ secrets.GPG_PUBLIC_KEY }}
         run: |
           echo "🔑 Importing private key..."
           echo "$GPG_PRIVATE_KEY" | gpg --import --batch --yes
